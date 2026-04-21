@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Знаника — Нейросеть для учителей</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', 'Nunito', sans-serif;
+      background: #FAFFF8;
+      color: #2D3B2F;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ===== COLOR VARIABLES ===== */
+    :root {
+      --green-50: #F0FAF2;
+      --green-100: #DFF5E3;
+      --green-200: #BEE8C8;
+      --green-300: #A8D5B6;
+      --green-400: #7DBF92;
+      --green-500: #5AAD74;
+      --green-600: #3E8E5C;
+      --green-700: #2D6B44;
+      --green-800: #1F4D30;
+      --white: #FFFFFF;
+      --gray-50: #F9FAFA;
+      --gray-100: #F3F5F3;
+      --gray-200: #E2E7E3;
+      --gray-300: #C5CEC7;
+      --gray-500: #6B7C6E;
+      --gray-700: #3D4F40;
+      --gray-900: #1A241C;
+      --radius-sm: 12px;
+      --radius-md: 20px;
+      --radius-lg: 28px;
+      --radius-xl: 36px;
+      --radius-full: 9999px;
+      --shadow-sm: 0 2px 8px rgba(62, 142, 92, 0.08);
+      --shadow-md: 0 8px 30px rgba(62, 142, 92, 0.12);
+      --shadow-lg: 0 16px 50px rgba(62, 142, 92, 0.15);
+      --shadow-xl: 0 24px 60px rgba(62, 142, 92, 0.18);
+    }
+
+    /* ===== UTILITY ===== */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    .section { padding: 100px 0; }
+
+    /* ===== ANIMATED BACKGROUND BLOBS ===== */
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.35;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .blob-1 { width: 500px; height: 500px; background: var(--green-200); top: -100px; right: -100px; }
+    .blob-2 { width: 400px; height: 400px; background: var(--green-100); bottom: -50px; left: -80px; }
+    .blob-3 { width: 350px; height: 350px; background: #D4EFC0; top: 40%; left: 60%; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-30px) scale(1.05); }
+    }
+
+    /* ===== NAVBAR ===== */
+    .navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      background: rgba(250, 255, 248, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(168, 213, 182, 0.2);
+      transition: all 0.3s ease;
+    }
+    .navbar .container {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 72px;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 1.6rem; font-weight: 800;
+      color: var(--green-700); text-decoration: none;
+    }
+    .nav-logo .logo-icon {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, var(--green-400), var(--green-600));
+      border-radius: 12px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; color: white;
+    }
+    .nav-links { display: flex; align-items: center; gap: 32px; list-style: none; }
+    .nav-links a {
+      text-decoration: none; color: var(--gray-700);
+      font-size: 0.95rem; font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--green-600); }
+    .nav-cta {
+      background: linear-gradient(135deg, var(--green-500), var(--green-600));
+      color: white !important; padding: 10px 24px;
+      border-radius: var(--radius-full); font-weight: 600 !important;
+      box-shadow: var(--shadow-sm); transition: all 0.3s ease;
+    }
+    .nav-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      background: linear-gradient(135deg, var(--green-600), var(--green-700));
+    }
+    .nav-hamburger {
+      display: none; flex-direction: column; gap: 5px; cursor: pointer;
+      background: none; border: none; padding: 8px;
+    }
+    .nav-hamburger span {
+      width: 24px; height: 2px; background: var(--gray-700);
+      border-radius: 2px; transition: all 0.3s;
+    }
+
+    /* ===== HERO ===== */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex; align-items: center;
+      padding-top: 72px;
+      overflow: hidden;
+    }
+    .hero .blob { animation: float 8s ease-in-out infinite; }
+    .hero .blob-1 { animation-delay: 0s; }
+    .hero .blob-2 { animation-delay: -3s; }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px; align-items: center;
+      position: relative; z-index: 1;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--green-100); color: var(--green-700);
+      padding: 8px 18px; border-radius: var(--radius-full);
+      font-size: 0.85rem; font-weight: 600;
+      margin-bottom: 24px;
+      border: 1px solid var(--green-200);
+    }
+    .hero-badge .dot {
+      width: 8px; height: 8px; background: var(--green-500);
+      border-radius: 50%; animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.3); }
+    }
+    .hero h1 {
+      font-family: 'Nunito', sans-serif;
+      font-size: 3.5rem; font-weight: 800;
+      line-height: 1.15; color: var(--gray-900);
+      margin-bottom: 20px;
+    }
+    .hero h1 .highlight {
+      background: linear-gradient(135deg, var(--green-500), var(--green-400));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      font-size: 1.15rem; color: var(--gray-500);
+      max-width: 500px; margin-bottom: 36px; line-height: 1.7;
+    }
+    .hero-buttons { display: flex; gap: 16px; flex-wrap: wrap; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, var(--green-500), var(--green-600));
+      color: white; padding: 16px 32px;
+      border-radius: var(--radius-full); font-size: 1rem; font-weight: 600;
+      text-decoration: none; border: none; cursor: pointer;
+      box-shadow: var(--shadow-md); transition: all 0.3s ease;
+    }
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
+    }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--white);
+      color: var(--green-700); padding: 16px 32px;
+      border-radius: var(--radius-full); font-size: 1rem; font-weight: 600;
+      text-decoration: none; border: 2px solid var(--green-200);
+      cursor: pointer; transition: all 0.3s ease;
+    }
+    .btn-secondary:hover {
+      border-color: var(--green-400);
+      background: var(--green-50);
+      transform: translateY(-2px);
+    }
+
+    /* Hero Visual */
+    .hero-visual {
+      position: relative;
+      display: flex; justify-content: center; align-items: center;
+    }
+    .hero-card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xl);
+      padding: 32px; width: 100%; max-width: 480px;
+      border: 1px solid var(--green-100);
+      position: relative;
+    }
+    .hero-card-header {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 20px;
+    }
+    .hero-card-avatar {
+      width: 48px; height: 48px;
+      background: linear-gradient(135deg, var(--green-200), var(--green-300));
+      border-radius: 14px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+    }
+    .hero-card-name { font-weight: 700; font-size: 1.05rem; color: var(--gray-900); }
+    .hero-card-role { font-size: 0.8rem; color: var(--gray-500); }
+    .hero-card-body { margin-bottom: 20px; }
+    .hero-card-line {
+      height: 12px; border-radius: 6px;
+      margin-bottom: 10px;
+    }
+    .hero-card-line.long { width: 100%; background: var(--green-50); }
+    .hero-card-line.medium { width: 75%; background: var(--green-100); }
+    .hero-card-line.short { width: 50%; background: var(--green-200); }
+    .hero-card-line.active {
+      width: 60%; background: linear-gradient(90deg, var(--green-300), var(--green-400));
+    }
+    .hero-card-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+    .hero-card-tag {
+      padding: 6px 14px; border-radius: var(--radius-full);
+      font-size: 0.75rem; font-weight: 600;
+      background: var(--green-100); color: var(--green-700);
+    }
+    .hero-card-tag.blue {
+      background: #E0F0FF; color: #3A7BC8;
+    }
+    .hero-card-tag.purple {
+      background: #F0E4FF; color: #7C5CBF;
+    }
+
+    .floating-badge {
+      position: absolute;
+      background: var(--white);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      padding: 14px 20px;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 0.85rem; font-weight: 600;
+      border: 1px solid var(--green-100);
+      animation: float 5s ease-in-out infinite;
+      z-index: 2;
+    }
+    .floating-badge.top-right { top: -20px; right: -30px; animation-delay: -1s; }
+    .floating-badge.bottom-left { bottom: -15px; left: -25px; animation-delay: -3s; }
+    .floating-badge .badge-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+    }
+    .floating-badge .badge-icon.green { background: var(--green-100); }
+    .floating-badge .badge-icon.orange { background: #FFF0E0; }
+
+    /* ===== STATS BAR ===== */
+    .stats-bar {
+      background: var(--white);
+      border-top: 1px solid var(--green-100);
+      border-bottom: 1px solid var(--green-100);
+      padding: 40px 0;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 32px; text-align: center;
+    }
+    .stat-item h3 {
+      font-family: 'Nunito', sans-serif;
+      font-size: 2.5rem; font-weight: 800;
+      background: linear-gradient(135deg, var(--green-500), var(--green-600));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat-item p {
+      font-size: 0.9rem; color: var(--gray-500);
+      margin-top: 4px; font-weight: 500;
+    }
+
+    /* ===== FEATURES ===== */
+    .features { position: relative; }
+    .features .blob-3 { opacity: 0.2; }
+    .section-header {
+      text-align: center; max-width: 650px;
+      margin: 0 auto 64px;
+    }
+    .section-label {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--green-100); color: var(--green-700);
+      padding: 6px 16px; border-radius: var(--radius-full);
+      font-size: 0.8rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; margin-bottom: 16px;
+    }
+    .section-header h2 {
+      font-family: 'Nunito', sans-serif;
+      font-size: 2.5rem; font-weight: 800;
+      color: var(--gray-900); margin-bottom: 16px;
+      line-height: 1.2;
+    }
+    .section-header p {
+      font-size: 1.05rem; color: var(--gray-500); line-height: 1.7;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+      position: relative; z-index: 1;
+    }
+    .feature-card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 36px 30px;
+      border: 1px solid var(--green-100);
+      transition: all 0.4s ease;
+      position: relative; overflow: hidden;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--green-300), var(--green-500));
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .feature-card:hover {
+      transform: translateY(-8px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--green-200);
+    }
+    .feature-card:hover::before { opacity: 1; }
+    .feature-icon {
+      width: 56px; height: 56px;
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem; margin-bottom: 20px;
+    }
+    .feature-icon.green { background: var(--green-100); }
+    .feature-icon.blue { background: #E0F0FF; }
+    .feature-icon.purple { background: #F0E4FF; }
+    .feature-icon.orange { background: #FFF0E0; }
+    .feature-icon.pink { background: #FFE8F0; }
+    .feature-icon.teal { background: #E0F5F0; }
+    .feature-card h3 {
+      font-family: 'Nunito', sans-serif;
+      font-size: 1.2rem; font-weight: 700;
+      color: var(--gray-900); margin-bottom: 10px;
+    }
+    .feature-card p {
+      font-size: 0.92rem; color: var(--gray-500); line-height: 1.65;
+    }
+
+    /* ===== HOW IT WORKS ===== */
+    .how-it-works {
+      background: linear-gradient(180deg, var(--green-50), var(--white));
+      position: relative;
+    }
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 40px; position: relative;
+    }
+    .steps-grid::before {
+      content: '';
+      position: absolute;
+      top: 48px; left: 16%; right: 16%;
+      height: 3px;
+      background: linear-gradient(90deg, var(--green-200), var(--green-400), var(--green-200));
+      border-radius: 2px;
+    }
+    .step-card { text-align: center; position: relative; z-index: 1; }
+    .step-number {
+      width: 72px; height: 72px;
+      background: linear-gradient(135deg, var(--green-400), var(--green-600));
+      color: white;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Nunito', sans-serif;
+      font-size: 1.5rem; font-weight: 800;
+      margin: 0 auto 24px;
+      box-shadow: 0 8px 24px rgba(90, 173, 116, 0.3);
+      border: 4px solid var(--white);
+    }
+    .step-card h3 {
+      font-family: 'Nunito', sans-serif;
+      font-size: 1.15rem; font-weight: 700;
+      color: var(--gray-900); margin-bottom: 10px;
+    }
+    .step-card p {
+      font-size: 0.9rem; color: var(--gray-500); line-height: 1.65;
+      max-width: 280px; margin: 0 auto;
+    }
+
+    /* ===== TESTIMONIALS ===== */
+    .testimonials { position: relative; }
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+    }
+    .testimonial-card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      border: 1px solid var(--green-100);
+      transition: all 0.3s ease;
+    }
+    .testimonial-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-4px);
+    }
+    .testimonial-stars {
+      display: flex; gap: 4px; margin-bottom: 16px;
+      font-size: 1rem; color: #F5C518;
+    }
+    .testimonial-text {
+      font-size: 0.95rem; color: var(--gray-700);
+      line-height: 1.7; margin-bottom: 20px;
+      font-style: italic;
+    }
+    .testimonial-author {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .testimonial-avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+    }
+    .testimonial-avatar.green { background: var(--green-100); }
+    .testimonial-avatar.blue { background: #E0F0FF; }
+    .testimonial-avatar.purple { background: #F0E4FF; }
+    .testimonial-name { font-weight: 700; font-size: 0.9rem; color: var(--gray-900); }
+    .testimonial-role { font-size: 0.8rem; color: var(--gray-500); }
+
+    /* ===== PRICING ===== */
+    .pricing {
+      background: linear-gradient(180deg, var(--white), var(--green-50));
+      position: relative;
+    }
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px; align-items: center;
+    }
+    .pricing-card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 40px 32px;
+      border: 2px solid var(--green-100);
+      text-align: center;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    .pricing-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-lg);
+    }
+    .pricing-card.popular {
+      border-color: var(--green-400);
+      box-shadow: var(--shadow-lg);
+      transform: scale(1.05);
+    }
+    .pricing-card.popular:hover {
+      transform: scale(1.05) translateY(-6px);
+    }
+    .popular-badge {
+      position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+      background: linear-gradient(135deg, var(--green-500), var(--green-600));
+      color: white; padding: 6px 20px;
+      border-radius: var(--radius-full);
+      font-size: 0.75rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .pricing-card h3 {
+      font-family: 'Nunito', sans-serif;
+      font-size: 1.3rem; font-weight: 700;
+      color: var(--gray-900); margin-bottom: 8px;
+    }
+    .pricing-card .price {
+      font-family: 'Nunito', sans-serif;
+      font-size: 2.8rem; font-weight: 800;
+      color: var(--green-600); margin: 16px 0;
+    }
+    .pricing-card .price span {
+      font-size: 1rem; font-weight: 500;
+      color: var(--gray-500);
+    }
+    .pricing-features {
+      list-style: none; text-align: left;
+      margin: 24px 0; display: flex;
+      flex-direction: column; gap: 12px;
+    }
+    .pricing-features li {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 0.9rem; color: var(--gray-700);
+    }
+    .pricing-features li .check {
+      width: 20px; height: 20px;
+      background: var(--green-100); color: var(--green-600);
+      border-radius: 50%; display: flex;
+      align-items: center; justify-content: center;
+      font-size: 0.7rem; flex-shrink: 0;
+    }
+    .pricing-card .btn-primary,
+    .pricing-card .btn-secondary {
+      width: 100%; justify-content: center;
+    }
+
+    /* ===== CTA SECTION ===== */
+    .cta-section {
+      padding: 100px 0;
+      position: relative; overflow: hidden;
+    }
+    .cta-card {
+      background: linear-gradient(135deg, var(--green-600), var(--green-700));
+      border-radius: var(--radius-xl);
+      padding: 80px 60px;
+      text-align: center;
+      position: relative; overflow: hidden;
+    }
+    .cta-card::before {
+      content: '';
+      position: absolute;
+      width: 400px; height: 400px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 50%;
+      top: -200px; right: -100px;
+    }
+    .cta-card::after {
+      content: '';
+      position: absolute;
+      width: 300px; height: 300px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 50%;
+      bottom: -150px; left: -50px;
+    }
+    .cta-card h2 {
+      font-family: 'Nunito', sans-serif;
+      font-size: 2.5rem; font-weight: 800;
+      color: white; margin-bottom: 16px;
+      position: relative; z-index: 1;
+    }
+    .cta-card p {
+      font-size: 1.1rem; color: rgba(255,255,255,0.85);
+      max-width: 550px; margin: 0 auto 36px;
+      line-height: 1.7; position: relative; z-index: 1;
+    }
+    .cta-card .btn-white {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: white; color: var(--green-700);
+      padding: 16px 36px; border-radius: var(--radius-full);
+      font-size: 1rem; font-weight: 700;
+      text-decoration: none; border: none; cursor: pointer;
+      box-shadow: var(--shadow-lg);
+      transition: all 0.3s ease; position: relative; z-index: 1;
+    }
+    .cta-card .btn-white:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-xl);
+    }
+
+    /* ===== FOOTER ===== */
+    .footer {
+      background: var(--gray-900);
+      color: rgba(255,255,255,0.7);
+      padding: 64px 0 32px;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 48px; margin-bottom: 48px;
+    }
+    .footer-brand .nav-logo {
+      color: white; margin-bottom: 16px;
+    }
+    .footer-brand .logo-icon {
+      background: linear-gradient(135deg, var(--green-400), var(--green-600));
+    }
+    .footer-brand p {
+      font-size: 0.9rem; line-height: 1.7;
+      max-width: 300px;
+    }
+    .footer-col h4 {
+      color: white; font-size: 0.95rem; font-weight: 700;
+      margin-bottom: 20px;
+    }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    .footer-col a {
+      color: rgba(255,255,255,0.6); text-decoration: none;
+      font-size: 0.9rem; transition: color 0.2s;
+    }
+    .footer-col a:hover { color: var(--green-300); }
+    .footer-bottom {
+      border-top: 1px solid rgba(255,255,255,0.1);
+      padding-top: 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 0.85rem;
+    }
+    .footer-socials { display: flex; gap: 16px; }
+    .footer-socials a {
+      width: 40px; height: 40px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,0.6);
+      text-decoration: none; font-size: 1rem;
+      transition: all 0.2s;
+    }
+    .footer-socials a:hover {
+      background: var(--green-600);
+      color: white;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1024px) {
+      .hero h1 { font-size: 2.8rem; }
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .pricing-grid { grid-template-columns: repeat(2, 1fr); }
+      .pricing-card.popular { transform: scale(1); }
+      .pricing-card.popular:hover { transform: translateY(-6px); }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .nav-hamburger { display: flex; }
+      .hero-grid { grid-template-columns: 1fr; text-align: center; }
+      .hero p { margin-left: auto; margin-right: auto; }
+      .hero-buttons { justify-content: center; }
+      .hero-visual { margin-top: 40px; }
+      .hero h1 { font-size: 2.3rem; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .features-grid { grid-template-columns: 1fr; }
+      .steps-grid { grid-template-columns: 1fr; gap: 32px; }
+      .steps-grid::before { display: none; }
+      .testimonials-grid { grid-template-columns: 1fr; }
+      .pricing-grid { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
+      .section-header h2 { font-size: 2rem; }
+      .cta-card { padding: 48px 28px; }
+      .cta-card h2 { font-size: 1.8rem; }
+      .footer-grid { grid-template-columns: 1fr; gap: 32px; }
+      .footer-bottom { flex-direction: column; gap: 16px; text-align: center; }
+      .floating-badge { display: none; }
+    }
+
+    /* ===== SCROLL ANIMATIONS ===== */
+    .fade-up {
+      opacity: 0; transform: translateY(40px);
+      transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .fade-up.visible {
+      opacity: 1; transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar">
+    <div class="container">
+      <a href="#" class="nav-logo">
+        <div class="logo-icon">🌱</div>
+        Знаника
+      </a>
+      <ul class="nav-links">
+        <li><a href="#features">Возможности</a></li>
+        <li><a href="#how">Как работает</a></li>
+        <li><a href="#reviews">Отзывы</a></li>
+        <li><a href="#pricing">Тарифы</a></li>
+        <li><a href="#cta" class="nav-cta">Попробовать бесплатно</a></li>
+      </ul>
+      <button class="nav-hamburger" onclick="this.classList.toggle('active')">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="container">
+      <div class="hero-grid">
+        <div class="hero-content">
+          <div class="hero-badge">
+            <span class="dot"></span>
+            Уже 12 000+ учителей с нами
+          </div>
+          <h1>
+            Учите с лёгкостью.<br />
+            <span class="highlight">Знаника</span> поможет.
+          </h1>
+          <p>
+            Универсальная нейросеть для учителей любого предмета. Генерируйте планы уроков, тесты и персонализированные задания за секунды — и тратьте время на то, что действительно важно.
+          </p>
+          <div class="hero-buttons">
+            <a href="#cta" class="btn-primary">
+              🚀 Начать бесплатно
+            </a>
+            <a href="#how" class="btn-secondary">
+              ▶ Смотреть демо
+            </a>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <div class="hero-card">
+            <div class="hero-card-header">
+              <div class="hero-card-avatar">👩‍🏫</div>
+              <div>
+                <div class="hero-card-name">План урока: Фотосинтез</div>
+                <div class="hero-card-role">Биология, 6 класс • Сгенерировано за 3 сек</div>
+              </div>
+            </div>
+            <div class="hero-card-body">
+              <div class="hero-card-line active"></div>
+              <div class="hero-card-line long"></div>
+              <div class="hero-card-line medium"></div>
+              <div class="hero-card-line short"></div>
+            </div>
+            <div class="hero-card-tags">
+              <span class="hero-card-tag">📝 Тест</span>
+              <span class="hero-card-tag blue">🎨 Презентация</span>
+              <span class="hero-card-tag purple">🧩 Задания</span>
+            </div>
+          </div>
+          <div class="floating-badge top-right">
+            <div class="badge-icon green">⏱️</div>
+            Экономия 5ч/неделю
+          </div>
+          <div class="floating-badge bottom-left">
+            <div class="badge-icon orange">✨</div>
+            Персонализация
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== STATS BAR ===== -->
+  <section class="stats-bar">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-item fade-up">
+          <h3>12 000+</h3>
+          <p>учителей используют</p>
+        </div>
+        <div class="stat-item fade-up">
+          <h3>850 000+</h3>
+          <p>уроков создано</p>
+        </div>
+        <div class="stat-item fade-up">
+          <h3>5 часов</h3>
+          <p>экономии в неделю</p>
+        </div>
+        <div class="stat-item fade-up">
+          <h3>98%</h3>
+          <p>довольных пользователей</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FEATURES ===== -->
+  <section class="features section" id="features">
+    <div class="blob blob-3"></div>
+    <div class="container">
+      <div class="section-header fade-up">
+        <div class="section-label">✨ Возможности</div>
+        <h2>Всё, что нужно учителю — в одном месте</h2>
+        <p>Знаника понимает ваш предмет, класс и стиль преподавания. Просто скажите, что нужно — и получите готовый результат.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card fade-up">
+          <div class="feature-icon green">📝</div>
+          <h3>Генерация планов уроков</h3>
+          <p>Создавайте структурированные планы уроков по ФГОС за считанные секунды. Учитывайте тему, класс и цели обучения.</p>
+        </div>
+        <div class="feature-card fade-up">
+          <div class="feature-icon blue">🧪</div>
+          <h3>Тесты и контрольные</h3>
+          <p>Автоматическое создание тестов разного уровня сложности с ответами и пояснениями. Поддержка всех предметов.</p>
+        </div>
+        <div class="feature-card fade-up">
+          <div class="feature-icon purple">🎯</div>
+          <h3>Персонализация обучения</h3>
+          <p>Адаптивные задания для каждого ученика с учётом его уровня, темпа и стиля усвоения материала.</p>
+        </div>
+        <div class="feature-card fade-up">
+          <div class="feature-icon orange">📊</div>
+          <h3>Аналитика прогресса</h3>
+          <p>Наглядные дашборды с прогрессом класса и отдельных учеников. Выявляйте пробелы и корректируйте программу.</p>
+        </div>
+        <div class="feature-card fade-up">
+          <div class="feature-icon pink">💬</div>
+          <h3>Умный помощник</h3>
+          <p>Задавайте вопросы в свободной форме: «Как объяснить дроби 5 классу?» — и получите понятные методические подсказки.</p>
+        </div>
+        <div class="feature-card fade-up">
+          <div class="feature-icon teal">🏠</div>
+          <h3>Домашние задания</h3>
+          <p>Генерация домашних заданий с пошаговыми инструкциями для учеников и автоматической проверкой.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== HOW IT WORKS ===== -->
+  <section class="how-it-works section" id="how">
+    <div class="container">
+      <div class="section-header fade-up">
+        <div class="section-label">🔄 Как это работает</div>
+        <h2>Три шага к лёгкому уроку</h2>
+        <p>Никакой магии — только удобство и мощь нейросетей, адаптированная для реальных задач учителя.</p>
+      </div>
+      <div class="steps-grid">
+        <div class="step-card fade-up">
+          <div class="step-number">1</div>
+          <h3>Опишите задачу</h3>
+          <p>Выберите предмет, класс и тему. Или просто напишите, что вам нужно — на обычном языке.</p>
+        </div>
+        <div class="step-card fade-up">
+          <div class="step-number">2</div>
+          <h3>Получите результат</h3>
+          <p>Знаника создаст план, тест или задание за несколько секунд. Всё структурировано и готово к использованию.</p>
+        </div>
+        <div class="step-card fade-up">
+          <div class="step-number">3</div>
+          <h3>Настройте под себя</h3>
+          <p>Отредактируйте, добавьте своё, сохраните в коллекцию. Результат всегда можно доработать одним кликом.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== TESTIMONIALS ===== -->
+  <section class="testimonials section" id="reviews">
+    <div class="container">
+      <div class="section-header fade-up">
+        <div class="section-label">💬 Отзывы</div>
+        <h2>Что говорят учителя</h2>
+        <p>Реальные истории от педагогов, которые уже используют Знанику каждый день.</p>
+      </div>
+      <div class="testimonials-grid">
+        <div class="testimonial-card fade-up">
+          <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+          <p class="testimonial-text">«Раньше на подготовку к урокам уходил весь вечер. Теперь я делаю это за 15 минут по дороге в школу. Знаника — это как личный методист, который никогда не спит.»</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar green">👩‍🏫</div>
+            <div>
+              <div class="testimonial-name">Елена Смирнова</div>
+              <div class="testimonial-role">Учитель биологии, Москва</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card fade-up">
+          <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+          <p class="testimonial-text">«Я преподаю математику 20 лет и думал, что меня ничем не удивишь. Но персонализированные задания для каждого ученика — это действительно другой уровень.»</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar blue">👨‍🏫</div>
+            <div>
+              <div class="testimonial-name">Андрей Козлов</div>
+              <div class="testimonial-role">Учитель математики, Казань</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card fade-up">
+          <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+          <p class="testimonial-text">«Интерфейс настолько простой, что я разобралась без инструкций. Никаких сложных настроек — просто пишешь, что нужно, и получаешь результат. Обожаю!»</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar purple">👩‍💻</div>
+            <div>
+              <div class="testimonial-name">Мария Петрова</div>
+              <div class="testimonial-role">Учитель русского языка, СПб</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PRICING ===== -->
+  <section class="pricing section" id="pricing">
+    <div class="container">
+      <div class="section-header fade-up">
+        <div class="section-label">💰 Тарифы</div>
+        <h2>Выберите свой план</h2>
+        <p>Начните бесплатно и масштабируйтесь по мере роста. Без скрытых платежей.</p>
+      </div>
+      <div class="pricing-grid">
+        <div class="pricing-card fade-up">
+          <h3>Старт</h3>
+          <p style="color: var(--gray-500); font-size: 0.9rem;">Для знакомства</p>
+          <div class="price">0 ₽ <span>/ мес</span></div>
+          <ul class="pricing-features">
+            <li><span class="check">✓</span> 20 генераций в месяц</li>
+            <li><span class="check">✓</span> 3 предмета</li>
+            <li><span class="check">✓</span> Базовые шаблоны</li>
+            <li><span class="check">✓</span> Сообщество учителей</li>
+          </ul>
+          <a href="#" class="btn-secondary" style="width:100%;justify-content:center;">Начать бесплатно</a>
+        </div>
+        <div class="pricing-card popular fade-up">
+          <div class="popular-badge">⭐ Популярный</div>
+          <h3>Профи</h3>
+          <p style="color: var(--gray-500); font-size: 0.9rem;">Для активной работы</p>
+          <div class="price">490 ₽ <span>/ мес</span></div>
+          <ul class="pricing-features">
+            <li><span class="check">✓</span> Безлимитные генерации</li>
+            <li><span class="check">✓</span> Все предметы</li>
+            <li><span class="check">✓</span> Персонализация заданий</li>
+            <li><span class="check">✓</span> Аналитика прогресса</li>
+            <li><span class="check">✓</span> Приоритетная поддержка</li>
+          </ul>
+          <a href="#" class="btn-primary">Попробовать 14 дней</a>
+        </div>
+        <div class="pricing-card fade-up">
+          <h3>Школа</h3>
+          <p style="color: var(--gray-500); font-size: 0.9rem;">Для всей команды</p>
+          <div class="price">2 990 ₽ <span>/ мес</span></div>
+          <ul class="pricing-features">
+            <li><span class="check">✓</span> Всё из тарифа «Профи»</li>
+            <li><span class="check">✓</span> До 50 учителей</li>
+            <li><span class="check">✓</span> Админ-панель</li>
+            <li><span class="check">✓</span> Общая библиотека</li>
+            <li><span class="check">✓</span> Персональный менеджер</li>
+          </ul>
+          <a href="#" class="btn-secondary" style="width:100%;justify-content:center;">Связаться с нами</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CTA ===== -->
+  <section class="cta-section" id="cta">
+    <div class="container">
+      <div class="cta-card fade-up">
+        <h2>Готовы учить с удовольствием? 🌿</h2>
+        <p>Присоединяйтесь к тысячам учителей, которые уже экономят время и создают вдохновляющие уроки вместе с Знаникой.</p>
+        <a href="#" class="btn-white">🚀 Попробовать бесплатно</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="#" class="nav-logo">
+            <div class="logo-icon">🌱</div>
+            Знаника
+          </a>
+          <p>Универсальная платформа на базе нейросетей для учителей. Делаем образование легче, персональнее и вдохновляющее.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Продукт</h4>
+          <ul>
+            <li><a href="#">Возможности</a></li>
+            <li><a href="#">Тарифы</a></li>
+            <li><a href="#">Для школ</a></li>
+            <li><a href="#">Обновления</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Ресурсы</h4>
+          <ul>
+            <li><a href="#">Блог</a></li>
+            <li><a href="#">Методички</a></li>
+            <li><a href="#">FAQ</a></li>
+            <li><a href="#">Поддержка</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Компания</h4>
+          <ul>
+            <li><a href="#">О нас</a></li>
+            <li><a href="#">Контакты</a></li>
+            <li><a href="#">Политика конфиденциальности</a></li>
+            <li><a href="#">Условия использования</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 Знаника. Все права защищены.</span>
+        <div class="footer-socials">
+          <a href="#">📱</a>
+          <a href="#">💬</a>
+          <a href="#">📧</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===== SCROLL ANIMATION SCRIPT ===== -->
+  <script>
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry, index) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => {
+            entry.target.classList.add('visible');
+          }, index * 80);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+    // Navbar scroll effect
+    window.addEventListener('scroll', () => {
+      const navbar = document.querySelector('.navbar');
+      if (window.scrollY > 50) {
+        navbar.style.boxShadow = '0 4px 20px rgba(62, 142, 92, 0.1)';
+      } else {
+        navbar.style.boxShadow = 'none';
+      }
+    });
+  </script>
+
+</body>
+</html>
